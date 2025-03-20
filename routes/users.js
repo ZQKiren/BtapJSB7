@@ -6,16 +6,22 @@ let {check_authentication,check_authorization} = require('../utils/check_auth')
 let constants = require('../utils/constants')
 
 /* GET users listing. */
-router.get('/',check_authentication,check_authorization(constants.MOD_PERMISSION), async function (req, res, next) {
+router.get('/', check_authentication, check_authorization(constants.MOD_PERMISSION), async function (req, res, next) {
   try {
+    const currentUserId = req.user.id; 
     let users = await userController.GetAllUser();
+    users = users.filter(user => user.id !== currentUserId);
     CreateSuccessRes(res, 200, users);
   } catch (error) {
     next(error)
   }
 });
-router.get('/:id',check_authentication,check_authorization(constants.MOD_PERMISSION), async function (req, res, next) {
+router.get('/:id', check_authentication, check_authorization(constants.MOD_PERMISSION), async function (req, res, next) {
   try {
+    const currentUserId = req.user.id;
+    if (req.params.id === currentUserId) {
+      return CreateErrorRes(res, 403, { message: "Bạn không thể xem thông tin người dùng của chính mình qua endpoint này" });
+    }
     let user = await userController.GetUserById(req.params.id)
     CreateSuccessRes(res, 200, user);
   } catch (error) {
